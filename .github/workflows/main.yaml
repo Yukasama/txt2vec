@@ -109,9 +109,24 @@ jobs:
         run: |
           mkdir -p data/datasets
           .venv/bin/pytest \
+            --cov=src \         
+            --cov-report=xml \  
+            --cov-report=html:htmlcov \ 
+            --cov-report=term \   
             --html=pytest-report.html \
             --self-contained-html \
             --junitxml=pytest-report.xml
+
+      - name: Coverage summary
+        if: always()
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage.xml
+          badge: true
+          format: markdown
+          output: both
+          fail_below_min: true
+          thresholds: "60 80"
 
       - name: Publish unit test results
         if: always()
