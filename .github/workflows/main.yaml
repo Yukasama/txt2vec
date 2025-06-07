@@ -120,6 +120,7 @@ jobs:
 
       - name: Coverage summary
         if: always()
+        continue-on-error: true
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
           filename: coverage.xml
