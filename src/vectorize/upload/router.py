@@ -1,6 +1,7 @@
 """Router for model upload and management."""
 
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import (
     APIRouter,
@@ -30,11 +31,14 @@ from .exceptions import ModelNotFoundError as RepoModelNotFound
 from .github_service import repo_info
 from .local_service import upload_zip_model
 from .models import UploadTask
-from .repository import save_upload_task
+from .repository import (
+    get_upload_task_by_id_db,
+    save_upload_task_db,
+)
 from .schemas import GitHubModelRequest, HuggingFaceModelRequest
 from .tasks import (
-    process_github_model_background,
-    process_huggingface_model_background,
+    process_github_model_bg,
+    process_huggingface_model_bg,
 )
 
 router = APIRouter(tags=["AIModel Upload"])
@@ -89,10 +93,10 @@ async def load_model_huggingface(
         task_status=TaskStatus.PENDING,
         source=RemoteModelSource.HUGGINGFACE,
     )
-    await save_upload_task(db, upload_task)
+    await save_upload_task_db(db, upload_task)
 
     background_tasks.add_task(
-        process_huggingface_model_background,
+        process_huggingface_model_bg,
         db,
         data.model_tag,
         data.revision,
@@ -152,9 +156,9 @@ async def load_model_github(
     task = UploadTask(
         model_tag=key, task_status=TaskStatus.PENDING, source=RemoteModelSource.GITHUB
     )
-    await save_upload_task(db, task)
+    await save_upload_task_db(db, task)
     background_tasks.add_task(
-        process_github_model_background, db, owner, repo, branch, task.id
+        process_github_model_bg, db, owner, repo, branch, task.id
     )
 
     return Response(
@@ -213,3 +217,16 @@ async def load_model_local(
         status_code=status.HTTP_201_CREATED,
         headers=headers,
     )
+
+
+@router.get("/{task_id}", summary="Get status of a model upload task")
+async def get_upload_status(
+    task_id: UUID,
+    db: Annotated[AsyncSession, Depends(get_session)],
+) -> UploadTask:
+    """Endpoint to retrieve the status of an upload task by its ID."""
+    task = await get_upload_task_by_id_db(db, task_id)
+    if not task:
+        raise ModelNotFoundError(f"Upload task with ID {task_id} not found")
+
+    return task

@@ -16,12 +16,17 @@ from vectorize.ai_model.repository import save_ai_model_db
 from vectorize.common.task_status import TaskStatus
 
 from .exceptions import ModelAlreadyExistsError
-from .github_service import load_github_model_and_cache_only
-from .huggingface_service import load_model_and_cache_only
-from .repository import update_upload_task_status
+from .github_service import load_github_model_and_cache_only_svc
+from .huggingface_service import load_huggingface_model_and_cache_only_svc
+from .repository import update_upload_task_status_db
+
+__all__ = [
+    "process_github_model_bg",
+    "process_huggingface_model_bg",
+]
 
 
-async def process_huggingface_model_background(
+async def process_huggingface_model_bg(
     db: AsyncSession, model_tag: str, revision: str, task_id: UUID
 ) -> None:
     """Processes a Hugging Face model upload in the background.
@@ -45,7 +50,7 @@ async def process_huggingface_model_background(
 
     try:
         logger.info("[BG] Starting model upload for task", taskId=task_id)
-        await load_model_and_cache_only(model_tag, revision)
+        await load_huggingface_model_and_cache_only_svc(model_tag, revision)
 
         ai_model = AIModel(
             model_tag=key,
@@ -53,31 +58,31 @@ async def process_huggingface_model_background(
             source=ModelSource.HUGGINGFACE,
         )
         await save_ai_model_db(db, ai_model)
-        await update_upload_task_status(db, task_id, TaskStatus.DONE)
+        await update_upload_task_status_db(db, task_id, TaskStatus.DONE)
 
         logger.info("[BG] Task completed successfully", taskId=task_id)
 
     except ModelAlreadyExistsError as e:
         logger.error(f"[BG] Model already exists for task {task_id}: {e}")
         await db.rollback()
-        await update_upload_task_status(
+        await update_upload_task_status_db(
             db, task_id, TaskStatus.FAILED, error_msg=str(e)
         )
     except IntegrityError as e:
         logger.error(f"[BG] IntegrityError in task {task_id}: {e}")
         await db.rollback()
-        await update_upload_task_status(
+        await update_upload_task_status_db(
             db, task_id, TaskStatus.FAILED, error_msg=str(e)
         )
     except Exception as e:
         logger.error(f"[BG] Error in task {task_id}: {e}")
         await db.rollback()
-        await update_upload_task_status(
+        await update_upload_task_status_db(
             db, task_id, TaskStatus.FAILED, error_msg=str(e)
         )
 
 
-async def process_github_model_background(  # noqa: D417
+async def process_github_model_bg(  # noqa: D417
     db: AsyncSession, owner: str, repo: str, branch: str, task_id: UUID
 ) -> None:
     """Processes a GitHub model upload in the background.
@@ -101,7 +106,7 @@ async def process_github_model_background(  # noqa: D417
 
     try:
         logger.info("[BG] Starting model upload for task", taskId=task_id)
-        load_github_model_and_cache_only(owner, repo, branch)
+        load_github_model_and_cache_only_svc(owner, repo, branch)
 
         ai_model = AIModel(
             model_tag=key,
@@ -109,26 +114,26 @@ async def process_github_model_background(  # noqa: D417
             source=ModelSource.GITHUB,
         )
         await save_ai_model_db(db, ai_model)
-        await update_upload_task_status(db, task_id, TaskStatus.DONE)
+        await update_upload_task_status_db(db, task_id, TaskStatus.DONE)
 
         logger.info("[BG] Task completed successfully", taskId=task_id)
 
     except ModelAlreadyExistsError as e:
         logger.error(f"[BG] Model already exists for task {task_id}: {e}")
         await db.rollback()
-        await update_upload_task_status(
+        await update_upload_task_status_db(
             db, task_id, TaskStatus.FAILED, error_msg=str(e)
         )
     except IntegrityError as e:
         logger.error(f"[BG] IntegrityError in task {task_id}: {e}")
         await db.rollback()
-        await update_upload_task_status(
+        await update_upload_task_status_db(
             db, task_id, TaskStatus.FAILED, error_msg=str(e)
         )
     # pylint: disable=broad-except
     except Exception as e:
         logger.error(f"[BG] Error in task {task_id}: {e}")
         await db.rollback()
-        await update_upload_task_status(
+        await update_upload_task_status_db(
             db, task_id, TaskStatus.FAILED, error_msg=str(e)
         )

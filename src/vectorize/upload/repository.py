@@ -16,8 +16,14 @@ from vectorize.common.task_status import TaskStatus
 
 from .models import UploadTask
 
+__all__ = [
+    "get_upload_task_by_id_db",
+    "save_upload_task_db",
+    "update_upload_task_status_db"
+]
 
-async def save_upload_task(db: AsyncSession, task: UploadTask) -> None:
+
+async def save_upload_task_db(db: AsyncSession, task: UploadTask) -> None:
     """Saves a new upload task to the database.
 
     Args:
@@ -29,7 +35,7 @@ async def save_upload_task(db: AsyncSession, task: UploadTask) -> None:
     await db.refresh(task)
 
 
-async def update_upload_task_status(
+async def update_upload_task_status_db(
     db: AsyncSession,
     task_id: UUID,
     status: TaskStatus,
@@ -59,5 +65,23 @@ async def update_upload_task_status(
         await db.commit()
     except NoResultFound:
         logger.exception(
-            "[update_upload_task_status] Task mit ID nicht gefunden!", task_id=task_id
+            "[update_upload_task_status_db] Task mit ID nicht gefunden!",
+            task_id=task_id
         )
+
+
+async def get_upload_task_by_id_db(
+    db: AsyncSession,
+    task_id: UUID
+) -> UploadTask | None:
+    """Retrieves a single upload task by its ID.
+
+    Args:
+        db (AsyncSession): The asynchronous database session.
+        task_id (UUID): The unique identifier of the upload task.
+
+    Returns:
+        UploadTask | None: The found task, or None if not found.
+    """
+    result = await db.exec(select(UploadTask).where(UploadTask.id == task_id))
+    return result.one_or_none()

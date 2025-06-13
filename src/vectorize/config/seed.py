@@ -1,17 +1,20 @@
 """Seed the database with initial data."""
 
+from datetime import UTC, datetime
 from uuid import UUID
 
 from loguru import logger
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from vectorize.ai_model.model_source import ModelSource
+from vectorize.ai_model.model_source import ModelSource, RemoteModelSource
 from vectorize.ai_model.models import AIModel
+from vectorize.common.task_status import TaskStatus
 from vectorize.config.config import settings
 from vectorize.dataset.classification import Classification
 from vectorize.dataset.dataset_source import DatasetSource
 from vectorize.dataset.models import Dataset
+from vectorize.upload.models import UploadTask
 
 __all__ = ["seed_db"]
 
@@ -26,6 +29,9 @@ DATASET_BACKUP2_ID = UUID("9d2f3e4b-8c7f-4d2a-9f1e-0a6f3e4d2a5b")
 AI_MODEL_READ_ID = UUID("7d2f3e4b-8c7f-4d2a-9f1e-0a6f3e4d2a5b")
 AI_MODEL_FAIL_ID = UUID("8d2f3e4b-8c7f-4d2a-9f1e-0a6f3e4d2a5b")
 AI_MODEL_DELETE_ID = UUID("2d2f3e4b-8c7f-4d2a-9f1e-0a6f3e4d2a5b")
+
+UPLOAD_TASK_GH_ID = UUID("d2f3e4b8-8c7f-4d2a-9f1e-0a6f3e4d2a5b")
+UPLOAD_TASK_HF_ID = UUID("d2f3e4b8-8c7f-4d2a-9f1e-0a6f3e4d2a5c")
 
 
 async def seed_db(session: AsyncSession) -> None:
@@ -161,6 +167,30 @@ async def seed_db(session: AsyncSession) -> None:
             name="Any Paged Model 05",
             source=ModelSource.LOCAL,
             model_tag="any_model_05",
+        ),
+    )
+    session.add(
+        UploadTask(
+            id=UPLOAD_TASK_GH_ID,
+            model_tag="example-github-model",
+            task_status=TaskStatus.PENDING,
+            source=RemoteModelSource.GITHUB,
+            created_at=datetime(2025, 6, 10, 9, 0, tzinfo=UTC),
+            updated_at=datetime(2025, 6, 10, 9, 5, tzinfo=UTC),
+            end_date=datetime(2025, 6, 10, 9, 5, tzinfo=UTC),
+            error_msg=None,
+        ),
+    )
+    session.add(
+        UploadTask(
+            id=UPLOAD_TASK_HF_ID,
+            model_tag="example-hf-model",
+            task_status=TaskStatus.PENDING,
+            source=RemoteModelSource.HUGGINGFACE,
+            created_at=datetime(2025, 6, 11, 14, 30, tzinfo=UTC),
+            updated_at=datetime(2025, 6, 11, 14, 31, tzinfo=UTC),
+            end_date=datetime(2025, 6, 11, 14, 35, tzinfo=UTC),
+            error_msg=None,
         ),
     )
     await session.commit()

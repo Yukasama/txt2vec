@@ -10,10 +10,12 @@ from loguru import logger
 
 from .exceptions import InvalidModelError, ModelNotFoundError, NoValidModelsFoundError
 
+__all__ = ["load_github_model_and_cache_only_svc", "repo_info"]
+
 _github_models: dict[str, str] = {}
 
 
-def load_github_model_and_cache_only(
+def load_github_model_and_cache_only_svc(
     owner: str,
     repo: str,
     branch: str = "main",
