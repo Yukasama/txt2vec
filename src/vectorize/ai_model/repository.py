@@ -1,8 +1,10 @@
 """AIModel repository."""
 
+import os
 from collections.abc import Sequence
 from uuid import UUID
 
+from huggingface_hub import snapshot_download
 from loguru import logger
 from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -10,7 +12,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from vectorize.common.exceptions import VersionMismatchError
 
 from .exceptions import ModelNotFoundError, NoModelFoundError
-from .models import AIModel, AIModelUpdate
+from .models import AIModel, AIModelUpdate, ModelSource
 
 __all__ = ["get_ai_model_db", "save_ai_model_db", "update_ai_model_db"]
 
@@ -150,3 +152,31 @@ async def delete_model_db(db: AsyncSession, model_id: UUID) -> None:
     await db.delete(model)
     await db.commit()
     logger.debug("Model deleted", model=model)
+
+
+async def get_ai_model_by_id(db: AsyncSession, model_id: UUID) -> AIModel:
+    """Retrieve an AI model by its UUID."""
+    statement = select(AIModel).where(AIModel.id == model_id)
+    result = await db.exec(statement)
+    model = result.first()
+    if model is None:
+        raise ModelNotFoundError(str(model_id))
+    logger.debug("AI Model loaded from DB by ID", ai_model=model)
+    return model
+
+
+async def import_hf_model_and_register(repo_id: str, db: AsyncSession) -> UUID:
+    """Download a Hugging Face model, store the snapshot folder as model_tag."""
+    snapshot_path = snapshot_download(
+        repo_id,
+        local_dir="data/models",
+        local_dir_use_symlinks=False,
+    )
+    model_tag = os.path.relpath(snapshot_path, "data/models")
+    model = AIModel(
+        name=repo_id,
+        model_tag=model_tag,
+        source=ModelSource.HUGGINGFACE,
+    )
+    await save_ai_model_db(db, model)
+    return model.id

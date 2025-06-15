@@ -1,10 +1,10 @@
 """Common test fixtures for the application."""
 
 import os
+import warnings
+from collections.abc import AsyncGenerator, Generator
 
 os.environ.setdefault("ENV", "testing")
-
-from collections.abc import AsyncGenerator, Generator
 
 import pytest
 from fastapi.testclient import TestClient
@@ -16,6 +16,16 @@ from vectorize.app import app
 from vectorize.config import settings
 from vectorize.config.db import get_session
 from vectorize.config.seed import seed_db
+
+
+def pytest_configure(config: object) -> None:
+    """Configure pytest to filter warnings for MPS pin_memory on Mac."""
+    del config  # unused
+    warnings.filterwarnings(
+        "ignore",
+        message=".*pin_memory.*not supported on MPS.*",
+        category=UserWarning,
+    )
 
 
 @pytest.fixture(scope="session")
@@ -48,7 +58,7 @@ async def session() -> AsyncGenerator[AsyncSession]:
 
 
 @pytest.fixture(name="client")
-def client_fixture(session: AsyncSession) -> Generator[TestClient]:
+def client_fixture(session: AsyncSession) -> Generator:
     """Create a test client for the FastAPI app.
 
     Args:

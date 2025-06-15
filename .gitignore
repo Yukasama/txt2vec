@@ -47,6 +47,7 @@ nosetests.xml
 coverage.xml
 *.cover
 *.py,cover
+.coverage.*
 
 # === Black / mypy / linting ===
 .mypy_cache/

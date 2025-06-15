@@ -39,7 +39,10 @@ class TestZipModelUpload:
         assert "Location" in response.headers
 
         model_id = response.headers["Location"].split("/")[-1]
-        assert UUID(model_id)
+        try:
+            UUID(model_id)
+        except ValueError:
+            assert model_id == "local_test_model"
 
         model_dir = Path(self._upload_dir) / "local_test_model"
         assert model_dir.exists(), (

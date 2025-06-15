@@ -4,8 +4,10 @@ This module contains functions for managing background tasks related to
 model uploads and processing, such as handling Hugging Face models.
 """
 
+from pathlib import Path
 from uuid import UUID
 
+from huggingface_hub import snapshot_download
 from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -17,7 +19,6 @@ from vectorize.common.task_status import TaskStatus
 
 from .exceptions import ModelAlreadyExistsError
 from .github_service import load_github_model_and_cache_only
-from .huggingface_service import load_model_and_cache_only
 from .repository import update_upload_task_status
 
 
@@ -41,22 +42,23 @@ async def process_huggingface_model_background(
         IntegrityError: If a database integrity error occurs.
         Exception: If an error occurs during model processing or database operations.
     """
-    key = f"{model_tag}@{revision}"
-
     try:
         logger.info("[BG] Starting model upload for task", taskId=task_id)
-        await load_model_and_cache_only(model_tag, revision)
-
+        snapshot_path = snapshot_download(
+            repo_id=model_tag,
+            revision=revision,
+            cache_dir="data/models",
+            allow_patterns=["*.safetensors", "*.json"],
+        )
+        rel_snapshot = str(Path(snapshot_path).relative_to("data/models"))
         ai_model = AIModel(
-            model_tag=key,
+            model_tag=rel_snapshot,
             name=model_tag,
             source=ModelSource.HUGGINGFACE,
         )
         await save_ai_model_db(db, ai_model)
         await update_upload_task_status(db, task_id, TaskStatus.DONE)
-
         logger.info("[BG] Task completed successfully", taskId=task_id)
-
     except ModelAlreadyExistsError as e:
         logger.error(f"[BG] Model already exists for task {task_id}: {e}")
         await db.rollback()

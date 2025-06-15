@@ -72,6 +72,8 @@ dependencies = [
     "pyarrow>=20.0.0",
     "chardet>=5.2.0",
     "datasets>=3.6.0",
+    "sentence-transformers>=4.1.0",
+    "accelerate>=1.7.0",
 ]
 
 [project.scripts]
@@ -121,6 +123,13 @@ markers = [
     "ai_model_read: mark test as ai model read related",
     "ai_model_write: mark test as ai model write related",
     "synthesis: marks test as synthesis related",
+    "evaluation: marks test as evaluation related",
+    "evaluation_unit: marks test as evaluation unit test",
+    "evaluation_api: marks test as evaluation API test",
+    "evaluation_integration: marks test as evaluation integration test",
+    "integration: marks test as integration test",
+    "api: marks test as API test",
+    "training: marks test as training related",
 ]
 minversion = "8.3.5"
 testpaths = ["tests"]

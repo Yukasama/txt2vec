@@ -161,7 +161,7 @@ def _handle_results(
     result = {
         "models": [
             {
-                "model_id": model_id,
+                "model_tag": Path(model_dir).name,  # model_tag statt model_id
                 "model_name": Path(model_dir).name,
                 "model_dir": str(model_dir),
             }

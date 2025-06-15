@@ -9,7 +9,9 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 from .model_source import ModelSource
 
 if TYPE_CHECKING:
+    from vectorize.evaluation.models import EvaluationTask
     from vectorize.inference.models import InferenceCounter
+    from vectorize.training.models import TrainingTask
 
 __all__ = ["AIModel", "AIModelAll", "AIModelCreate", "AIModelPublic", "AIModelUpdate"]
 
@@ -97,6 +99,10 @@ class AIModel(SQLModel, table=True):
 
     trained_children: list["AIModel"] = Relationship(back_populates="trained_from")
 
+    training_tasks: list["TrainingTask"] = Relationship(back_populates="trained_model")
+
+    evaluation_tasks: list["EvaluationTask"] = Relationship(back_populates="model")
+
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), insert_default=func.now()),
         description="Timestamp when the AI model was created.",
@@ -107,4 +113,9 @@ class AIModel(SQLModel, table=True):
             DateTime(timezone=True), onupdate=func.now(), insert_default=func.now()
         ),
         description="Timestamp when the AI model was last updated.",
+    )
+
+    trained_from_tag: str | None = Field(
+        default=None,
+        description="Tag of the parent model this model was trained from.",
     )

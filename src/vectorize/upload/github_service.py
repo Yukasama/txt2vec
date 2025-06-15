@@ -128,9 +128,11 @@ def repo_info(repo_url: str, revision: str | None = None) -> bool:
     Raises:
         ModelNotFoundError: Wenn Repo oder Branch/Tag nicht gefunden werden.
     """
-    api_url = str(repo_url).replace(
-        "https://github.com/", "https://api.github.com/repos/"
-    ).rstrip("/")
+    api_url = (
+        str(repo_url)
+        .replace("https://github.com/", "https://api.github.com/repos/")
+        .rstrip("/")
+    )
     branch = revision or "main"
     check_url = f"{api_url}/branches/{branch}"
     resp = httpx.get(check_url, timeout=10)
