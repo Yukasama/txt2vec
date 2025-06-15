@@ -11,7 +11,7 @@ from .embedding_model import EmbeddingUsage, Embeddings
 from .repository import create_inference_counter, get_model_count
 from .schemas import EmbeddingRequest
 from .utils.generator import _generate_embeddings
-from .utils.model_loader import _load_model
+from .utils.model_loader import load_model
 
 __all__ = ["get_embeddings_srv", "get_model_stats_srv"]
 
@@ -36,7 +36,7 @@ async def get_embeddings_srv(db: AsyncSession, data: EmbeddingRequest) -> Embedd
     """
     ai_model = await get_ai_model_db(db, data.model)
 
-    model, tokenizer = _load_model(ai_model.model_tag)
+    model, tokenizer = load_model(ai_model.model_tag)
     results, total_toks = _generate_embeddings(data, model, tokenizer)
 
     await create_inference_counter(db, ai_model.id)
