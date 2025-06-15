@@ -116,7 +116,7 @@ async def train_model(  # noqa: PLR0914, PLR0915
     if missing:
         raise TrainingDatasetNotFoundError(f"Missing datasets: {', '.join(missing)}")
     tag_time = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
-    task = TrainingTask(id=uuid4(), task_status=TaskStatus.PENDING)
+    task = TrainingTask(id=uuid4())
     output_dir = (
         f"data/models/trained_models/{model.model_tag}-finetuned-"
         f"{tag_time}-{str(task.id)[:8]}"
@@ -173,7 +173,7 @@ async def cancel_training(
     task = await get_train_task_by_id(db, task_id)
     if not task:
         raise TrainingTaskNotFoundError(str(task_id))
-    if task.task_status not in {TaskStatus.PENDING, TaskStatus.RUNNING}:
+    if task.task_status not in {TaskStatus.QUEUED, TaskStatus.RUNNING}:
         return Response(
             status_code=status.HTTP_400_BAD_REQUEST,
             content=f"Cannot cancel task with status: {task.task_status.name}",

@@ -7,7 +7,6 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
 from loguru import logger
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from vectorize.common.task_status import TaskStatus
 from vectorize.config.db import get_session
 
 from .exceptions import EvaluationTaskNotFoundError
@@ -45,7 +44,7 @@ async def evaluate_model(
     Returns:
         202 Accepted with Location header pointing to task status
     """
-    task = EvaluationTask(id=uuid4(), task_status=TaskStatus.PENDING)
+    task = EvaluationTask(id=uuid4())
     await save_evaluation_task(db, task)
 
     background_tasks.add_task(

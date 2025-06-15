@@ -8,7 +8,7 @@ __all__ = ["TaskStatus"]
 class TaskStatus(StrEnum):
     """Status of a process."""
 
-    PENDING = "P"
+    QUEUED = "Q"
     RUNNING = "R"
     DONE = "D"
     FAILED = "F"

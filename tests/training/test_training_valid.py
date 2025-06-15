@@ -67,7 +67,7 @@ class TestTrainingValid:
         status_response = client.get(f"/training/{task_id}/status")
         assert status_response.status_code == HTTP_200_OK
         status_data = status_response.json()
-        assert status_data["status"] in {"PENDING", "RUNNING", "DONE", "FAILED"}
+        assert status_data["status"] in {"QUEUED", "RUNNING", "DONE", "FAILED"}
         model_dirs = TRAINED_MODELS_DIR.glob("*-finetuned-*")
         for d in model_dirs:
             shutil.rmtree(d, ignore_errors=True)

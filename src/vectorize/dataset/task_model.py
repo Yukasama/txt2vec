@@ -27,7 +27,7 @@ class UploadDatasetTask(SQLModel, table=True):
     )
 
     task_status: TaskStatus = Field(
-        default=TaskStatus.PENDING,
+        default=TaskStatus.QUEUED,
         index=True,
         description="Current status of the dataset upload task.",
     )

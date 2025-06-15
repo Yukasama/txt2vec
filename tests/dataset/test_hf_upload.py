@@ -80,7 +80,7 @@ class TestHuggingFaceUpload:
     @pytest.mark.parametrize(
         "dataset_tag",
         [
-            "RoboVerseOrg/roboverse_data",
+            "Mialiu/nerf",
             "Hcompany/WebClick",
             "Jiahao004/DeepTheorem",
             "yandex/alchemist",

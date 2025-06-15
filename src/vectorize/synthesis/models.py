@@ -26,7 +26,7 @@ class SynthesisTask(SQLModel, table=True):
     )
 
     task_status: TaskStatus = Field(
-        default=TaskStatus.PENDING,
+        default=TaskStatus.QUEUED,
         index=True,
         description="Current status of the synthetic generation.",
     )

@@ -28,7 +28,7 @@ class UploadTask(SQLModel, table=True):
     )
 
     task_status: TaskStatus = Field(
-        default=TaskStatus.PENDING,
+        default=TaskStatus.RUNNING,
         index=True,
         description="Status of the upload task.",
     )
